@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Ajuste de Saldo</title>
+    <style>
+        :root {
+            --primary-color: #ff3333;
+            --background-color: #000000;
+            --surface-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --input-background: #2a2a2a;
+            --input-border: #3a3a3a;
+            --success-color: #4caf50;
+            --error-color: #ff6b6b;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: var(--surface-color);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(255, 51, 51, 0.2);
+            width: 100%;
+            max-width: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,51,51,0.1) 0%, rgba(255,51,51,0) 70%);
+            transform: rotate(45deg);
+            z-index: 0;
+        }
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 1.5rem;
+            font-size: 2rem;
+            position: relative;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .input-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-color);
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--input-border);
+            border-radius: 10px;
+            background-color: var(--input-background);
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 51, 51, 0.3);
+        }
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 70%);
+            transition: all 0.5s ease;
+            z-index: -1;
+            transform: translate(-50%, -50%) scale(0);
+        }
+        button:hover::after {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        #resultado {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background-color: var(--input-background);
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        #resultado::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(45deg);
+            z-index: 0;
+        }
+        .error { color: var(--error-color); }
+        .success { color: var(--success-color); }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse {
+            animation: pulse 0.5s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Calculadora de Ajuste de Saldo</h1>
+        <div class="input-group">
+            <label for="saldoExtrato">Saldo do Extrato:</label>
+            <input type="number" id="saldoExtrato" placeholder="Digite o saldo do extrato" aria-describedby="extratoHint" step="0.01">
+            <small id="extratoHint" style="color: #b0b0b0;">Insira o valor do extrato bancário</small>
+        </div>
+        <div class="input-group">
+            <label for="saldoContabilidade">Saldo da Contabilidade:</label>
+            <input type="number" id="saldoContabilidade" placeholder="Digite o saldo da contabilidade" aria-describedby="contabilidadeHint" step="0.01">
+            <small id="contabilidadeHint" style="color: #b0b0b0;">Insira o valor registrado na contabilidade</small>
+        </div>
+        <button onclick="calcularDiferenca()">Calcular Diferença</button>
+        <div id="resultado" role="alert" aria-live="polite"></div>
+    </div>
+
+    <script>
+        function calcularDiferenca() {
+            const saldoExtrato = parseFloat(document.getElementById('saldoExtrato').value);
+            const saldoContabilidade = parseFloat(document.getElementById('saldoContabilidade').value);
+            const resultadoElement = document.getElementById('resultado');
+
+            resultadoElement.className = '';
+            resultadoElement.classList.add('pulse');
+
+            if (isNaN(saldoExtrato) || isNaN(saldoContabilidade)) {
+                mostrarResultado('Por favor, insira valores numéricos válidos.', 'error');
+                return;
+            }
+
+            const diferenca = saldoContabilidade - saldoExtrato;
+            let mensagem = `A diferença é de R$ ${Math.abs(diferenca).toFixed(2)}.<br>`;
+
+            if (diferenca > 0) {
+                mensagem += `Você deve lançar uma <strong>saída</strong> não conciliada de R$ ${diferenca.toFixed(2)} na contabilidade.`;
+            } else if (diferenca < 0) {
+                mensagem += `Você deve lançar uma <strong>entrada</strong> não conciliada de R$ ${Math.abs(diferenca).toFixed(2)} na contabilidade.`;
+            } else {
+                mensagem = "Os saldos estão iguais. Não é necessário nenhum lançamento.";
+            }
+
+            mostrarResultado(mensagem, diferenca !== 0 ? 'success' : '');
+        }
+
+        function mostrarResultado(mensagem, tipo) {
+            const resultadoElement = document.getElementById('resultado');
+            resultadoElement.innerHTML = mensagem;
+            resultadoElement.className = tipo;
+            resultadoElement.style.opacity = '1';
+        }
+
+        // Remover animação após conclusão
+        document.getElementById('resultado').addEventListener('animationend', function() {
+            this.classList.remove('pulse');
+        });
+    </script>
+</body>
+</html>
